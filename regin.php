@@ -60,70 +60,63 @@
 		<script>
 			var loading = document.getElementsByClassName("loading")[0];
 			var button = document.getElementsByClassName("button")[0];
-
+			
 			function RegIn() {
 				var _login = document.getElementsByName("_login")[0].value;
 				var _password = document.getElementsByName("_password")[0].value;
 				var _passwordCopy = document.getElementsByName("_passwordCopy")[0].value;
-				
-				// Исправленный регекс: мин 8 символов, латиница, цифры, спецсимволы, заглавная
-				var passRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+				if(_login == ""){
+					alert("Введите логин");
+					return;
+				}
 
-				// ИСПРАВЛЕННАЯ ЛОГИКА ПРОВЕРок
-				if (_login == "") {
-					alert("Введите логин.");
+				if(_password == ""){
+					alert("Введите пароль");
+					return;
+				}
+
+				if(CheckPassword(_password) == false){
+					alert("Пароль не соответсвует следующим требованиям.");
+					return;
+				}
+				if(_password != _passwordCopy){
+					alert("пароли не совпадают");
 					return;
 				}
 				
-				if (!passRegex.test(_password)) {
-					alert("Данный пароль не прошел проверку. Минимум 8 символов, латинские буквы (заглавные и строчные), цифры и символы (@$!%*?&).");
-					return;
-				}
-
-				if (_password != _passwordCopy) {
-					alert("Пароли не совпадают.");
-					return;
-				}
-
-				// Если все ок, отправляем
 				loading.style.display = "block";
 				button.className = "button_diactive";
 				
 				var data = new FormData();
 				data.append("login", _login);
 				data.append("password", _password);
-
+				
+				// AJAX запрос
 				$.ajax({
 					url         : 'ajax/regin_user.php',
-					type        : 'POST',
+					type        : 'POST', // важно!
 					data        : data,
 					cache       : false,
 					dataType    : 'html',
+					// отключаем обработку передаваемых данных, пусть передаются как есть
 					processData : false,
-					contentType : false,
+					// отключаем установку заголовка типа запроса. Так jQuery скажет серверу что это строковой запрос
+					contentType : false, 
+					// функция успешного ответа сервера
 					success: function (_data) {
-						_data = _data.trim();
-						console.log("Ответ сервера: " + _data);
-						if (_data == "-1") {
-							alert("Пользователь с таким логином уже существует.");
+						console.log("Авторизация прошла успешно, id: " +_data);
+						if(_data == -1) {
+							alert("Пользователь с таким логином существует.");
 							loading.style.display = "none";
 							button.className = "button";
-						} else if (_data == "weak_password") {
-							alert("Ошибка сервера: слабый пароль.");
-							loading.style.display = "none";
-							button.className = "button";
-						} else if (!isNaN(_data) && _data > 0) {
-							alert("Регистрация завершена успешно!");
-							// Шаг 5: Здесь нужно перенаправлять не на user.php, а на страницу ввода кода
-							// location.href = "verify_code.php?user_id=" + _data; 
-							location.href = "user.php"; 
 						} else {
-							alert("Произошла неизвестная ошибка: " + _data);
+							location.reload();
 							loading.style.display = "none";
 							button.className = "button";
 						}
 					},
-					error: function(){
+					// функция ошибки
+					error: function( ){
 						console.log('Системная ошибка!');
 						loading.style.display = "none";
 						button.className = "button";
@@ -131,9 +124,28 @@
 				});
 			}
 
-			function PressToEnter(e) {
-				if (e.keyCode == 13) RegIn();
+			function CheckPassword(value){
+				let regex = /(?=.*[0-9])(?=.*[!@#$^&?*\-_=])(?=.*[a-z])(?=.*[A-Z])[0-9a-zA-Z!@#$%^&?*\-_=]{8,}/;
+				return regex.test(value);
+				
 			}
+			
+			function PressToEnter(e) {
+				if (e.keyCode == 13) {
+					var _login = document.getElementsByName("_login")[0].value;
+					var _password = document.getElementsByName("_password")[0].value;
+					var _passwordCopy = document.getElementsByName("_passwordCopy")[0].value;
+					
+					if(_password != "") {
+						if(_login != "") {
+							if(_passwordCopy != "") {
+								RegIn();
+							}
+						}
+					}
+				}
+			}
+			
 		</script>
 	</body>
 </html>

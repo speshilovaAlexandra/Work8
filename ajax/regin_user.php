@@ -1,41 +1,32 @@
 <?php
-session_start();
-include("../settings/connect_datebase.php");
+	session_start();
+	include("../settings/connect_datebase.php");
+	
+	$login = $_POST['login'];
+	$password = $_POST['password'];
 
-// Получаем данные
-$login = trim($_POST['login']);
-$password = $_POST['password'];
+    $CheckPassword = 
+	preg_match('/(?=.*[0-9])(?=.*[!@#$^&?*\-_=])(?=.*[a-z])(?=.*[A-Z])[0-9a-zA-Z!@#$%^&?*\-_=]{8,}/', 
+	$password);
 
-// Валидация пароля (Шаг 2) - мин 8 символов
-if (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/', $password)) {
-    die("weak_password");
-}
-
-// Проверка существования (Шаг 3) - Используем подготовленные выражения
-$stmt = $mysqli->prepare("SELECT `id` FROM `users` WHERE `login` = ?");
-$stmt->bind_param("s", $login);
-$stmt->execute();
-$result = $stmt->get_result();
-
-if ($result->num_rows > 0) {
-    echo "-1";
-} else {
-    // Хеширование (Шаг 4)
-    $hash = password_hash($password, PASSWORD_BCRYPT);
-    $role = 0;
-
-    // Вставка (Шаг 5 подготовка - нужно будет добавить email)
-    // Пока вставляем только логин и пароль
-    $stmt_insert = $mysqli->prepare("INSERT INTO `users`(`login`, `password`, `roll`) VALUES (?, ?, ?)");
-    $stmt_insert->bind_param("ssi", $login, $hash, $role);
-    
-    if ($stmt_insert->execute()) {
-        $new_id = $mysqli->insert_id;
-        $_SESSION['user'] = $new_id;
-        echo $new_id;
-    } else {
-        echo "db_error";
-    }
-}
-$stmt->close();
+	if($CheckPassword == false)
+		exit;
+	
+    $password = password_hash($password, PASSWORD_DEFAULT);
+	// ищем пользователя
+	$query_user = $mysqli->query("SELECT * FROM `users` WHERE `login`='".$login."'");
+	$id = -1;
+	
+	if($user_read = $query_user->fetch_row()) {
+		echo $id;
+	} else {
+		$mysqli->query("INSERT INTO `users`(`login`, `password`, `roll`) VALUES ('".$login."', '".$password."', 0)");
+		
+		$query_user = $mysqli->query("SELECT * FROM `users` WHERE `login`='".$login."' AND `password`= '".$password."';");
+		$user_new = $query_user->fetch_row();
+		$id = $user_new[0];
+			
+		if($id != -1) $_SESSION['user'] = $id; // запоминаем пользователя
+		echo $id;
+	}
 ?>
