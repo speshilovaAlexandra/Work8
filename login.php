@@ -83,19 +83,24 @@
 					contentType : false, 
 					// функция успешного ответа сервера
 					success: function (_data) {
-						console.log("Авторизация прошла успешно, id: " +_data);
-						if(_data == "") {
+						_data = _data.trim();
+						console.log("Ответ сервера: " + _data);
+						if(_data == "need_code") {
+							location.href = "confirm.php"; 
+						} else if(_data == "error_auth") {
+							alert("Неверный логин или пароль.");
 							loading.style.display = "none";
 							button.className = "button";
-							alert("Логин или пароль не верный.");
+						} else if(_data == "mail_error") {
+							alert("Ошибка при отправке письма с кодом.");
+							loading.style.display = "none";
+							button.className = "button";
 						} else {
-							localStorage.setItem("token", _data);
-							location.reload();
+							alert("Системная ошибка: " + _data);
 							loading.style.display = "none";
 							button.className = "button";
 						}
 					},
-					// функция ошибки
 					error: function( ){
 						console.log('Системная ошибка!');
 						loading.style.display = "none";

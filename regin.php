@@ -65,69 +65,63 @@
 				var _login = document.getElementsByName("_login")[0].value;
 				var _password = document.getElementsByName("_password")[0].value;
 				var _passwordCopy = document.getElementsByName("_passwordCopy")[0].value;
-				if(_login == ""){
-					alert("Введите логин");
-					return;
-				}
+				
+				var passRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$/;
 
-				if(_password == ""){
-					alert("Введите пароль");
-					return;
-				}
+				if(_login != "") {
+					if(_password != "") {
+						if(_password == _passwordCopy) {
+							loading.style.display = "block";
+							button.className = "button_diactive";
+							
+							var data = new FormData();
+							data.append("login", _login);
+							data.append("password", _password);
+							
+							// AJAX запрос
+							$.ajax({
+								url         : 'ajax/regin_user.php',
+								type        : 'POST', // важно!
+								data        : data,
+								cache       : false,
+								dataType    : 'html',
+								// отключаем обработку передаваемых данных, пусть передаются как есть
+								processData : false,
+								// отключаем установку заголовка типа запроса. Так jQuery скажет серверу что это строковой запрос
+								contentType : false, 
+								// функция успешного ответа сервера
+								success: function (_data) {
+									_data = _data.trim(); // Очищаем от лишних пробелов
+									console.log("Ответ сервера: " + _data);
 
-				if(CheckPassword(_password) == false){
-					alert("Пароль не соответсвует следующим требованиям.");
-					return;
-				}
-				if(_password != _passwordCopy){
-					alert("пароли не совпадают");
-					return;
-				}
-				
-				loading.style.display = "block";
-				button.className = "button_diactive";
-				
-				var data = new FormData();
-				data.append("login", _login);
-				data.append("password", _password);
-				
-				// AJAX запрос
-				$.ajax({
-					url         : 'ajax/regin_user.php',
-					type        : 'POST', // важно!
-					data        : data,
-					cache       : false,
-					dataType    : 'html',
-					// отключаем обработку передаваемых данных, пусть передаются как есть
-					processData : false,
-					// отключаем установку заголовка типа запроса. Так jQuery скажет серверу что это строковой запрос
-					contentType : false, 
-					// функция успешного ответа сервера
-					success: function (_data) {
-						console.log("Авторизация прошла успешно, id: " +_data);
-						if(_data == -1) {
-							alert("Пользователь с таким логином существует.");
-							loading.style.display = "none";
-							button.className = "button";
-						} else {
-							location.reload();
-							loading.style.display = "none";
-							button.className = "button";
-						}
-					},
-					// функция ошибки
-					error: function( ){
-						console.log('Системная ошибка!');
-						loading.style.display = "none";
-						button.className = "button";
-					}
-				});
-			}
-
-			function CheckPassword(value){
-				let regex = /(?=.*[0-9])(?=.*[!@#$^&?*\-_=])(?=.*[a-z])(?=.*[A-Z])[0-9a-zA-Z!@#$%^&?*\-_=]{8,}/;
-				return regex.test(value);
-				
+									if(_data == "-1") {
+										alert("Пользователь с таким логином уже существует.");
+										loading.style.display = "none";
+										button.className = "button";
+									} else if(_data == "weak_password") {
+										alert("Пароль слишком слабый! Минимум 8 символов, заглавная буква, цифра и спецсимвол.");
+										loading.style.display = "none";
+										button.className = "button";
+									} else if (!isNaN(_data) && _data > 0) {
+										// Если пришло число (ID), значит регистрация успешна
+										alert("Регистрация завершена успешно!");
+										location.href = "user.php"; // Сразу перенаправляем в кабинет
+									} else {
+										alert("Произошла неизвестная ошибка: " + _data);
+										loading.style.display = "none";
+										button.className = "button";
+									}
+								},
+								// функция ошибки
+								error: function( ){
+									console.log('Системная ошибка!');
+									loading.style.display = "none";
+									button.className = "button";
+								}
+							});
+						} else alert("Пароли не совподают.");
+					} else alert("Введите пароль.");
+				} else alert("Введите логин.");
 			}
 			
 			function PressToEnter(e) {

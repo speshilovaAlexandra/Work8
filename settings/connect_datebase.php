@@ -1,5 +1,5 @@
 <?php
-	$mysqli = new mysqli('127.0.0.1', 'root', '', 'permaviat');
+	$mysqli = new mysqli('127.0.0.1', 'root', '', '8pr');
 	
 	function getClientIP() {
         if (!empty($_SERVER['HTTP_CLIENT_IP'])) {

@@ -1,19 +1,26 @@
 <?php
-	session_start();
-	include("./settings/connect_datebase.php");
-	
-	if (isset($_SESSION['user'])) {
-		if($_SESSION['user'] == -1) {
-			header("Location: login.php");
-		} else {
-			// проверяем пользователя, если админ выкидываем на админа
-			$user_to_query = $mysqli->query("SELECT `roll` FROM `users` WHERE `id` = ".$_SESSION['user']);
-			$user_to_read = $user_to_query->fetch_row();
-			
-			if($user_to_read[0] == 1) header("Location: login.php");
-		}
- 	} else header("Location: login.php");
-	
+session_start();
+include("./settings/connect_datebase.php");
+
+if (!isset($_SESSION['user']) || $_SESSION['user'] == -1) {
+    header("Location: login.php");
+    exit;
+}
+
+$user_id = $_SESSION['user'];
+$query = $mysqli->query("SELECT * FROM `users` WHERE `id` = $user_id");
+$user_data = $query->fetch_assoc();
+
+if (!isset($_SESSION['token']) || $_SESSION['token'] !== $user_data['token']) {
+    session_destroy();
+    header("Location: login.php?error=another_device"); 
+    exit;
+}
+
+if($user_data['roll'] == 1) {
+    header("Location: login.php");
+    exit;
+}
 ?>
 <!DOCTYPE HTML>
 <html>
